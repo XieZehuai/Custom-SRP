@@ -1,5 +1,6 @@
 ﻿using UnityEditor;
 using UnityEngine;
+using UnityEngine.Profiling;
 using UnityEngine.Rendering;
 
 public partial class CameraRenderer
@@ -9,11 +10,14 @@ public partial class CameraRenderer
      *   绘制 Unity 内置 Material，将其绘制成紫色，就像切换到 URP 后内置材质变紫色一样
      */
 
+    partial void PrepareBuffer();
+    partial void PrepareForSceneWindow();
     partial void DrawGizmos();
     partial void DrawUnsupportedShaders();
-    partial void PrepareForSceneWindow();
 
 #if UNITY_EDITOR // 非编辑器模式下忽略这部分代码
+
+    private string SampleName { get; set; }
 
     private static Material errorMaterial;
     private static ShaderTagId[] legacyShaderTagIds =
@@ -25,6 +29,21 @@ public partial class CameraRenderer
         new ShaderTagId("VertexLMRGBM"),
         new ShaderTagId("VertexLM"),
     };
+
+    partial void PrepareBuffer()
+    {
+        Profiler.BeginSample("Editor Only");
+        buffer.name = SampleName = camera.name;
+        Profiler.EndSample();
+    }
+
+    partial void PrepareForSceneWindow()
+    {
+        if (camera.cameraType == CameraType.SceneView)
+        {
+            ScriptableRenderContext.EmitWorldGeometryForSceneView(camera);
+        }
+    }
 
     partial void DrawUnsupportedShaders()
     {
@@ -55,13 +74,7 @@ public partial class CameraRenderer
         }
     }
 
-    partial void PrepareForSceneWindow()
-    {
-        if (camera.cameraType == CameraType.SceneView)
-        {
-            ScriptableRenderContext.EmitWorldGeometryForSceneView(camera);
-        }
-    }
-
+#else
+    private const string SampleName = COMMAND_BUFFER_NAME;
 #endif
 }

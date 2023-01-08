@@ -17,6 +17,7 @@ public partial class CameraRenderer
         this.context = context;
         this.camera = camera;
 
+        PrepareBuffer();
         PrepareForSceneWindow();
         if (!Cull())
             return;
@@ -35,7 +36,7 @@ public partial class CameraRenderer
         // 如果在设置摄像机参数前就执行 ClearRenderTarget，Unity 会使用 Hidden/InternalClear shader
         // 绘制一个填充整个屏幕的网格的方法来清屏，在 FrameDebugger 里命令是 Draw GL
         buffer.ClearRenderTarget(true, true, Color.clear);
-        buffer.BeginSample(COMMAND_BUFFER_NAME);
+        buffer.BeginSample(SampleName);
         ExecuteBuffer();
     }
 
@@ -70,7 +71,7 @@ public partial class CameraRenderer
 
     private void Submit()
     {
-        buffer.EndSample(COMMAND_BUFFER_NAME);
+        buffer.EndSample(SampleName);
         ExecuteBuffer();
 
         // 提交渲染指令，提交后前面设置的渲染指令才会被执行
