@@ -33,9 +33,15 @@ public partial class CameraRenderer
     {
         // 设置摄像机的参数，对于场景中的所有物体而言，摄像机的参数都是相同的，如 view matrix 和 projection matrix
         context.SetupCameraProperties(camera);
+
         // 如果在设置摄像机参数前就执行 ClearRenderTarget，Unity 会使用 Hidden/InternalClear shader
         // 绘制一个填充整个屏幕的网格的方法来清屏，在 FrameDebugger 里命令是 Draw GL
-        buffer.ClearRenderTarget(true, true, Color.clear);
+        CameraClearFlags flags = camera.clearFlags;
+        bool clearDepthBuffer = flags <= CameraClearFlags.Depth;
+        bool clearColorBuffer = flags == CameraClearFlags.Color;
+        Color clearColor = clearColorBuffer ? camera.backgroundColor.linear : Color.clear;
+        buffer.ClearRenderTarget(clearDepthBuffer, clearColorBuffer, clearColor);
+
         buffer.BeginSample(SampleName);
         ExecuteBuffer();
     }
