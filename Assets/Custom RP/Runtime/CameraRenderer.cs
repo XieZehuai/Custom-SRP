@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Rendering;
 
-public class CameraRenderer
+public partial class CameraRenderer
 {
     private const string COMMAND_BUFFER_NAME = "Render Camera";
 
@@ -17,15 +17,18 @@ public class CameraRenderer
         this.context = context;
         this.camera = camera;
 
+        PrepareForSceneWindow();
         if (!Cull())
             return;
 
         Setup();
         DrawVisibleGeometry();
+        DrawUnsupportedShaders();
+        DrawGizmos();
         Submit();
     }
 
-    void Setup()
+    private void Setup()
     {
         // 设置摄像机的参数，对于场景中的所有物体而言，摄像机的参数都是相同的，如 view matrix 和 projection matrix
         context.SetupCameraProperties(camera);
@@ -36,7 +39,7 @@ public class CameraRenderer
         ExecuteBuffer();
     }
 
-    bool Cull()
+    private bool Cull()
     {
         if (camera.TryGetCullingParameters(out ScriptableCullingParameters p))
         {
@@ -47,15 +50,16 @@ public class CameraRenderer
         return false;
     }
 
-    void DrawVisibleGeometry()
+    private void DrawVisibleGeometry()
     {
-        var sortingSettings = new SortingSettings(camera) {
+        var sortingSettings = new SortingSettings(camera)
+        {
             criteria = SortingCriteria.CommonOpaque
         };
         var drawingSettings = new DrawingSettings(unlitShaderTagId, sortingSettings);
         var filteringSettings = new FilteringSettings(RenderQueueRange.opaque);
         context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
-        
+
         context.DrawSkybox(camera);
 
         sortingSettings.criteria = SortingCriteria.CommonTransparent;
@@ -64,7 +68,7 @@ public class CameraRenderer
         context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
     }
 
-    void Submit()
+    private void Submit()
     {
         buffer.EndSample(COMMAND_BUFFER_NAME);
         ExecuteBuffer();
@@ -73,7 +77,7 @@ public class CameraRenderer
         context.Submit();
     }
 
-    void ExecuteBuffer()
+    private void ExecuteBuffer()
     {
         context.ExecuteCommandBuffer(buffer);
         buffer.Clear();
