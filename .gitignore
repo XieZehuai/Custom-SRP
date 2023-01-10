@@ -1,5 +1,7 @@
-.vscode
-Library
-Logs
-Temp
+.vscode/
+Library/
+Logs/
+Temp/
 Custom-SRP.sln
+obj
+*.csproj
